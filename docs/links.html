@@ -1,0 +1,320 @@
+---
+---
+<!DOCTYPE>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reference Resolution for the publicdocs Project</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+  <style type="text/css">
+    .title {
+    text-align: center;
+    }
+    .result-list td {
+    padding: 8px;
+}
+.tagline {
+  font-size: 12px;
+}
+.result-list tr:nth-child(even) {
+    background-color: #f0f0f0;
+}
+.result-list tr:nth-child(odd) {
+    background-color: #d0d0d0;
+}
+    .parent-project {
+      color: #888!important;
+    }
+    body {
+      text-align:center;
+    }
+    table.result-list {
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+}
+.headline {
+    font-size: 18pt;
+}
+
+.ref-msg {
+    margin-bottom: 10px;
+}
+.link-col {
+  text-align: left;
+}
+.name-col {
+  text-align: right;
+}
+body {
+    margin: 10px;
+    padding: 0;
+}
+  </style>
+</head>
+<body>
+<h3 class="title"><a href="https://github.com/publicdocs" class='parent-project'>publicdocs</a>/go - Reference Resolution</h3>
+<div class="tagline">The publicdocs project is an educational initiative to better understand the public documents that form the foundation of our society (not affiliated with any government agency)</div>
+
+
+<hr/>
+
+<div class="result-main">
+<div class="please-wait">Please wait.</div>
+<div class="ref-msg" style="display:none;">
+  <div class="headline"></div>
+  <div>Reference to resolve: <span class="ref-msg-var"></span></div>
+</div>
+<div class="results" style="display:none;">
+  <table class="result-list">
+    <tr style="display:none;" class="base-result">
+      <td class="name-col name-of-source"></td>
+      <td class="link-col"><a class="the-link" rel="noreferrer nofollow" target="_blank"></a></td>
+    </li>
+  </table>
+</div>
+</div>
+
+
+<hr/>
+<footer>
+  <small>
+© 2016 the authors of the <a href="https://github.com/publicdocs">https://github.com/publicdocs</a> project.
+Use subject to the <a href="https://github.com/publicdocs/go/blob/master/NOTICE">NOTICE</a>.
+No affiliation with or endorsement of or by any third party is implied. Not responsible for third-party services or links. Some sources may not have data for a given reference.</small>
+</footer>
+
+<script type="text/javascript">
+$(function() {
+  var name = '';
+  var ref = '';
+  var good = false;
+  var params = [];
+  if (location && location.search && location.search[0] == '?') {
+    params = location.search.split("?")[1].split("&");
+  }
+  var kvs = $(params).map(function(i) {
+    var d={};
+    var sp = this.split('=');
+    d['name']=decodeURIComponent(sp[0]);
+    d['val']=decodeURIComponent(sp[1]);
+    return d;
+  });
+  var qs = {};
+  $(kvs).each(function(i) {
+    qs[this['name']] = this['val'];
+  });
+  var makeurl = function(base, kvs) {
+    return base + "?" + $.param(kvs);
+  };
+  var addResult = function(srcname, linkname, url) {
+    var cl = $('.base-result').clone();
+    cl.children('.name-of-source').text(srcname);
+    cl.find('.the-link').text(linkname);
+    cl.find('.the-link').attr('href',url);
+    if (srcname == 'publicdocs Project') {
+      cl.find('.the-link').attr('rel','');
+      cl.find('.the-link').attr('target','');
+    }
+    cl.removeClass('base-result');
+    cl.show();
+    cl.appendTo($('.result-list'));
+  }
+  
+  var mdEscape = function(t) {
+    var badmd = "\\`_{}[]<>*_";
+    var ret = '';
+    for (var i = 0, l = t.length; i < l; i++) {
+      if (badmd.indexOf(t.charAt(i)) > -1) {
+        ret += '\\';
+      }
+      ret += t.charAt(i);
+    }
+    return ret
+  }
+  var refToId = function(t) {
+    var ret = '';
+    for (var i = 0, l = t.length; i < l; i++) {
+      if (t.charAt(i) == '/' || t.charAt(i) == ':' || t.charAt(i) == '*' || t.charAt(i) == '$') {
+        ret += '_';
+      } else {
+        ret += t.charAt(i);
+      }
+    }
+    return 'm_' + ret
+  }
+  if (qs['ns'] && qs['ref']) {
+    var refmsg = qs['ns'] + ':' + qs['ref'];
+    $('.ref-msg-var').text(refmsg);
+    $('.ref-msg').show();
+    
+    
+    if (qs['ns'] == 'uslm') {
+      // /us/pl/105/225 ->
+      //  http://api.fdsys.gov/link?collection=plaw&congress=111&lawtype=public&lawnum=78&link-type=html|pdf
+      var publicLaw = /^\/us\/pl\/([^\/]+)\/([^\/]+)(\/.*)?$/.exec(qs['ref'])
+      if (publicLaw) {
+        name = 'Public Law ' + publicLaw[1] + '-' + publicLaw[2]
+        ref = 'PL ' + publicLaw[1] + '-' + publicLaw[2]
+        addResult('US Government Publishing Office', ref + ' - HTML', makeurl('https://api.fdsys.gov/link',{
+          'collection':'plaw',
+          'congress':publicLaw[1],
+          'lawnum':publicLaw[2],
+          'lawtype':'public',
+          'link-type':'html'
+        }));
+        addResult('US Government Publishing Office', ref + ' - PDF', makeurl('https://api.fdsys.gov/link',{
+          'collection':'plaw',
+          'congress':publicLaw[1],
+          'lawnum':publicLaw[2],
+          'lawtype':'public',
+          'link-type':'pdf'
+        }));
+        addResult('US Government Publishing Office', ref + ' - HTML (via Statutes at Large)', makeurl('https://api.fdsys.gov/link',{
+          'collection':'statute',
+          'congress':publicLaw[1],
+          'lawnum':publicLaw[2],
+          'lawtype':'public',
+          'link-type':'html'
+        }));
+        addResult('US Government Publishing Office', ref + ' - PDF (via Statutes at Large)', makeurl('https://api.fdsys.gov/link',{
+          'collection':'statute',
+          'congress':publicLaw[1],
+          'lawnum':publicLaw[2],
+          'lawtype':'public',
+          'link-type':'pdf'
+        }));
+        // https://github.com/search?utf8=%E2%9C%93&q=org%3Apublicdocs+m__us_usc_t2_s1+in%3Apath&type=Code&ref=searchresults
+        var q = "org:publicdocs " + refToId(qs['ref']) + " in:path";
+        addResult('publicdocs Project', ref + ' - Content', makeurl('https://github.com/search',{
+          'utf8':'✓',
+          'type':'Code',
+          'q':q,
+          'ref':'searchresults',
+        }));
+        var q = "org:publicdocs \"" + mdEscape(qs['ref']) +"\"";
+        addResult('publicdocs Project', 'References to ' + ref, makeurl('https://github.com/search',{
+          'utf8':'✓',
+          'type':'Code',
+          'q':q,
+          'ref':'searchresults',
+        }));
+        good = true;
+      }
+      // /us/stat/38/384 ->
+      var statute = /^\/us\/stat\/([^\/]+)\/([^\/]+)(\/.*)?$/.exec(qs['ref'])
+      if (statute) {
+        name = 'Statutes at Large ' + statute[1] + '-' + statute[2];
+        ref = statute[1] + ' Stat. ' + statute[2];
+        addResult('US Government Publishing Office', ref + ' - HTML', makeurl('https://api.fdsys.gov/link',{
+          'collection':'statute',
+          'volume':statute[1],
+          'page':statute[2],
+          'link-type':'html'
+        }));
+        addResult('US Government Publishing Office', ref + ' - PDF', makeurl('https://api.fdsys.gov/link',{
+          'collection':'statute',
+          'volume':statute[1],
+          'page':statute[2],
+          'link-type':'pdf'
+        }));
+        // http://api.fdsys.gov/link?collection=plaw&statutecitation=124+stat+2859
+        addResult('US Government Publishing Office', ref + ' - HTML (via Public Laws)', makeurl('https://api.fdsys.gov/link',{
+          'collection':'plaw',
+          'statutecitation':statute[1] + ' stat ' + statute[2],
+          'link-type':'html'
+        }));
+        addResult('US Government Publishing Office', ref + ' - PDF (via Public Laws)', makeurl('https://api.fdsys.gov/link',{
+          'collection':'plaw',
+          'statutecitation':statute[1] + ' stat ' + statute[2],
+          'link-type':'html'
+        }));
+        // http://uscode.house.gov/statviewer.htm?volume=48&page=879
+        addResult('US House of Representatives OLRC', ref + ' - Image Browser', makeurl('http://uscode.house.gov/statviewer.htm',{
+          'volume':statute[1],
+          'page':statute[2]
+        }));
+        // https://github.com/search?utf8=%E2%9C%93&q=org%3Apublicdocs+m__us_usc_t2_s1+in%3Apath&type=Code&ref=searchresults
+        var q = "org:publicdocs " + refToId(qs['ref']) + " in:path";
+        addResult('publicdocs Project', ref + ' - Content', makeurl('https://github.com/search',{
+          'utf8':'✓',
+          'type':'Code',
+          'q':q,
+          'ref':'searchresults',
+        }));
+        var q = "org:publicdocs \"" + mdEscape(qs['ref']) +"\"";
+        addResult('publicdocs Project', 'References to ' + ref, makeurl('https://github.com/search',{
+          'utf8':'✓',
+          'type':'Code',
+          'q':q,
+          'ref':'searchresults',
+        }));
+        good = true;
+      }
+      // /us/usc/t3/s384 ->
+      var uscSect = /^\/us\/usc\/t([^\/]+)\/s([^\/]+)(\/.*)?$/.exec(qs['ref'])
+      if (uscSect) {
+        name = 'U.S. Code Title ' + uscSect[1] + ' Section ' + uscSect[2];
+        ref = uscSect[1] + ' U.S.C. § ' + uscSect[2];
+        
+        // https://github.com/search?utf8=%E2%9C%93&q=org%3Apublicdocs+m__us_usc_t2_s1+in%3Apath&type=Code&ref=searchresults
+        var q = "org:publicdocs " + refToId(qs['ref']) + " in:path";
+        addResult('publicdocs Project', ref + ' - Content', makeurl('https://github.com/search',{
+          'utf8':'✓',
+          'type':'Code',
+          'q':q,
+          'ref':'searchresults',
+        }));
+        var q = "org:publicdocs \"" + mdEscape(qs['ref']) +"\"";
+        addResult('publicdocs Project', 'References to ' + ref, makeurl('https://github.com/search',{
+          'utf8':'✓',
+          'type':'Code',
+          'q':q,
+          'ref':'searchresults',
+        }));
+        // http://api.fdsys.gov/link?collection=uscode&title=50&year=2011&section=797&type=usc
+        addResult('US Government Publishing Office', ref + ' - HTML', makeurl('https://api.fdsys.gov/link',{
+          'collection':'uscode',
+          'title':uscSect[1],
+          'section':uscSect[2],
+          'type':'usc',
+          'link-type':'html'
+        }));
+        addResult('US Government Publishing Office', ref + ' - PDF', makeurl('https://api.fdsys.gov/link',{
+          'collection':'uscode',
+          'title':uscSect[1],
+          'section':uscSect[2],
+          'type':'usc',
+          'link-type':'pdf'
+        }));
+        // http://uscode.house.gov/view.xhtml?req=granuleid:USC-prelim-title2-section40&num=0&edition=prelim
+        addResult('US House of Representatives OLRC', ref + ' - Latest', makeurl('http://uscode.house.gov/view.xhtml',{
+          'req':'granuleid:USC-prelim-title' + uscSect[1] + '-section' + uscSect[2],
+          'num':'0',
+          'edition':'prelim',
+        }));
+        
+        good = true;
+      }
+    }
+  }
+  if (!good) {
+    $('<div>Oops! We can\'t resolve that reference, sorry!</div>').insertAfter('.please-wait');
+  } else {
+    document.title = name + ' - Reference Resolution for the publicdocs Project'
+    if (ref) {
+      $('.headline').text(name + ' aka ' + ref);
+    } else {
+      $('.headline').text(name);
+    }
+    $('.results').show();
+  }
+  $('.please-wait').hide();
+});
+</script>
+
+</body>
