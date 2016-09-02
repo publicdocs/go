@@ -226,6 +226,11 @@ $(function() {
           'page':statute[2],
           'link-type':'pdf'
         }));
+        // https://www.govinfo.gov/app/contentdetails/#contentDetails?packageId=STATUTE-112&granuleId=STATUTE-112-Pg43
+        addResult('US Government Publishing Office', 'Metadata and Related Documents (govinfo)', makeurl('https://www.govinfo.gov/app/contentdetails/#contentDetails',{
+          'packageId':'STATUTE-'+statute[1]
+          'granuleId':'STATUTE-' + statute[1] + '-Pg' + statute[2]
+        }));
         // http://api.fdsys.gov/link?collection=plaw&statutecitation=124+stat+2859
         addResult('US Government Publishing Office', ref + ' - HTML (via Public Laws)', makeurl('https://api.fdsys.gov/link',{
           'collection':'plaw',
