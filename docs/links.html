@@ -188,6 +188,10 @@ $(function() {
           'lawtype':'public',
           'link-type':'pdf'
         }));
+        // https://www.govinfo.gov/app/contentdetails/#contentDetails?packageId=PLAW-113publ108
+        addResult('US Government Publishing Office', 'Metadata and Related Documents (govinfo)', makeurl('https://www.govinfo.gov/app/contentdetails/#contentDetails',{
+          'packageId':'PLAW-' + publicLaw[1] + 'publ' + publicLaw[2]
+        }));
         // https://github.com/search?utf8=%E2%9C%93&q=org%3Apublicdocs+m__us_usc_t2_s1+in%3Apath&type=Code&ref=searchresults
         var q = "org:publicdocs " + refToId(qs['ref']) + " in:path";
         addResult('publicdocs Project', ref + ' - Content', makeurl('https://github.com/search',{
