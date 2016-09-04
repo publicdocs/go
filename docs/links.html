@@ -24,7 +24,7 @@
     background-color: #f0f0f0;
 }
 .result-list tr:nth-child(odd) {
-    background-color: #d0d0d0;
+    background-color: #e4e4e4;
 }
     .parent-project {
       color: #888!important;
@@ -57,7 +57,7 @@ body {
   </style>
 </head>
 <body>
-<h3 class="title"><a href="https://github.com/publicdocs" class='parent-project'>publicdocs</a>/go - Reference Resolution</h3>
+<h3 class="title"><a href="https://publicdocs.github.io/" class='parent-project'>publicdocs</a>/go - Reference Resolution</h3>
 <div class="tagline">The publicdocs project is an educational initiative to better understand the public documents that form the foundation of our society (not affiliated with any government agency)</div>
 
 
@@ -153,7 +153,7 @@ $(function() {
     $('.ref-msg').show();
     
     
-    if (qs['ns'] == 'uslm') {
+    if (qs['ns'] == 'uslm' || qs['ns'] == 'uslm-x') {
       // /us/pl/105/225 ->
       //  http://api.fdsys.gov/link?collection=plaw&congress=111&lawtype=public&lawnum=78&link-type=html|pdf
       var publicLaw = /^\/us\/pl\/([^\/]+)\/([^\/]+)(\/.*)?$/.exec(qs['ref'])
@@ -309,14 +309,39 @@ $(function() {
         
         good = true;
       }
+      // /us/courts/scotus/usReporter/406/340 ->
+      var scotus = /^\/us\/courts\/scotus\/usReporter\/([0-9]+)\/([0-9]+)$/.exec(qs['ref'])
+      if (scotus) {
+        name = 'Supreme Court, United States Reports ' + scotus[1] + '-' + scotus[2];
+        ref = scotus[1] + ' U.S. ' + scotus[2];
+        // https://www.law.cornell.edu/supremecourt/text/353/436
+        addResult('LII (Cornell University)', ref, 'https://www.law.cornell.edu/supremecourt/text/' + scotus[1] + '/' + scotus[2]);
+        // https://github.com/search?utf8=%E2%9C%93&q=org%3Apublicdocs+m__us_usc_t2_s1+in%3Apath&type=Code&ref=searchresults
+        var q = "org:publicdocs " + ref + " in:path";
+        addResult('publicdocs Project', ref + ' - Content', makeurl('https://github.com/search',{
+          'utf8':'✓',
+          'type':'Code',
+          'q':q,
+          'ref':'searchresults',
+        }));
+        var q = "org:publicdocs \"" + mdEscape(qs['ref']) +"\"";
+        addResult('publicdocs Project', 'References to ' + ref, makeurl('https://github.com/search',{
+          'utf8':'✓',
+          'type':'Code',
+          'q':q,
+          'ref':'searchresults',
+        }));
+        good = true;
+      }
     }
   }
   if (!good) {
     $('<div>Oops! We can\'t resolve that reference, sorry!</div>').insertAfter('.please-wait');
   } else {
-    document.title = name + ' - Reference Resolution for the publicdocs Project'
+    document.title = name + ' - Reference Resolution - The publicdocs Project'
     if (ref) {
-      $('.headline').text(name + ' aka ' + ref);
+      document.title = ref + ' - Reference Resolution - The publicdocs Project'
+      $('.headline').text(ref + ' (' + name + ')');
     } else {
       $('.headline').text(name);
     }
